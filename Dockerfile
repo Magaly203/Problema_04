@@ -1,50 +1,30 @@
-# Usamos una imagen oficial de Node.js como base para nuestro contenedor.
-# Selecciona una imagen oficial de Node.js en su versión 14 como base para nuestro contenedor.
-FROM node:14
+# Usamos una imagen oficial de Node.js como base para crear nuestro contenedor. 
+# Esto es importante porque ya viene con todo lo necesario para ejecutar aplicaciones en Node.js.
+FROM node:16
 
-# Creamos el directorio de trabajo dentro del contenedor.
-# /usr/src/app es donde se ubicará nuestra aplicación.
-# Todo lo que copiemos o hagamos desde ahora se ejecutará dentro de esa carpeta, como si fuera el espacio principal donde estará nuestra aplicación.
+# Aquí definimos el directorio de trabajo dentro del contenedor. 
+# Es como crear una carpeta donde vamos a trabajar, en este caso la carpeta será '/usr/src/app'.
 WORKDIR /usr/src/app
 
-# Copiamos el archivo package.json y package-lock.json para instalar las dependencias.
-# Esto asegura que solo se copien los archivos de dependencias y no toda la app.
-# Estos archivos son importantes porque contienen las dependencias que la aplicación necesita para funcionar (los paquetes que se instalarán).
+# Ahora copiamos los archivos 'package.json' y 'package-lock.json' al contenedor.
+# Estos archivos contienen las dependencias de la aplicación, así que es importante copiarlos primero
+# antes de instalar las dependencias, para no tener que hacerlo nuevamente si no hay cambios en el código.
 COPY package*.json ./
 
-# Ejecutamos el comando npm install para instalar todas las dependencias de la aplicación.
-# Esto instala los paquetes necesarios que la aplicación requiere para funcionar.
+# Con esta línea instalamos todas las dependencias de Node.js que nuestra aplicación necesita.
+# El comando 'npm install' busca el archivo 'package.json' y descarga las dependencias listadas allí.
 RUN npm install
 
-# Copiamos el resto del código de la aplicación al contenedor.
-# Todo el código fuente de la aplicación es necesario para que funcione.
+# Luego copiamos todo el código fuente de la aplicación dentro del contenedor.
+# Con esto nos aseguramos de que el contenedor tenga acceso a todo el código necesario para ejecutar la aplicación.
 COPY . .
 
-# Exponemos el puerto 8080 para que la aplicación sea accesible desde el exterior.
-# Este es el puerto donde la app correrá.
-EXPOSE 8080
+# Aquí exponemos el puerto 3000 para que sea accesible fuera del contenedor.
+# Es decir, cuando se ejecute el contenedor, podremos acceder a la aplicación a través de este puerto.
+# Si nuestra app usa otro puerto, tendríamos que cambiar el número 3000.
+EXPOSE 3000
 
-# Ejecutamos el comando de inicio de la aplicación.
-# CMD ejecuta el comando `npm start` cuando el contenedor se inicia.
-# Es el comando principal que pone todo en marcha.
+# Finalmente, usamos este comando para ejecutar la aplicación.
+# 'npm start' es el comando que normalmente inicia el servidor en aplicaciones Node.js.
+# Este comando depende de que esté definido en el archivo 'package.json'.
 CMD ["npm", "start"]
-
-# En este punto, ya tenemos el entorno de desarrollo para Node.js configurado.
-# Ahora, agregamos MySQL al contenedor.
-
-# Primero actualizamos la lista de paquetes con apt-get update.
-# Instalamos MySQL Server en el contenedor.
-RUN apt-get update && apt-get install -y mysql-server
-
-# Copiamos el archivo de configuración de MySQL al contenedor.
-# Este archivo asegura que MySQL esté correctamente configurado.
-COPY ./mysql-config.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
-
-# Exponemos el puerto 3306 para MySQL.
-# Este es el puerto predeterminado de MySQL.
-# Esto permitirá que nuestra base de datos sea accesible desde fuera si lo necesitamos.
-EXPOSE 3306
-
-# Iniciamos el servicio de MySQL junto con Node.js.
-# El comando CMD asegura que tanto Node.js como MySQL se ejecuten en el mismo contenedor.
-CMD ["sh", "-c", "service mysql start && npm start"]
